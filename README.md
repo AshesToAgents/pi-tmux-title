@@ -34,7 +34,7 @@ The extension activates automatically when pi is running inside a tmux session. 
 | `pi · bash` | Running a bash command |
 | `pi · edit` | Editing a file |
 | `pi · read` | Reading a file |
-| `pi` | Session shut down |
+| _(restores automatic-rename)_ | Session shut down |
 
 The tool name in the title updates in real time as the agent executes each tool call, so you can see at a glance what pi is doing across multiple tmux windows or panes.
 
