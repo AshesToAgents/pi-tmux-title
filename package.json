@@ -1,0 +1,10 @@
+{
+  "name": "pi-tmux-title",
+  "version": "1.0.0",
+  "description": "Dynamically set tmux window titles based on pi agent activity",
+  "keywords": ["pi-package"],
+  "license": "MIT",
+  "pi": {
+    "extensions": ["./extensions"]
+  }
+}
