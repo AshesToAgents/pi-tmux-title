@@ -22,19 +22,28 @@ function isTmux(): boolean {
 	return !!process.env.TMUX;
 }
 
-function renameWindow(name: string) {
+// Capture the window ID at load time so we always target the correct window,
+// even if the user switches to a different tmux window while pi is working.
+function getWindowId(): string | null {
 	try {
-		execSync(`tmux rename-window -- "${name}"`, { stdio: "pipe" });
+		return execSync("tmux display-message -p '#{window_id}'", { stdio: ["pipe", "pipe", "pipe"] }).toString().trim();
 	} catch {
-		// Not in tmux or tmux not available — ignore
+		return null;
 	}
 }
 
 export default function (pi: ExtensionAPI) {
 	if (!isTmux()) return;
 
+	const windowId = getWindowId();
+	if (!windowId) return;
+
 	function setTitle(suffix: string) {
-		renameWindow(`${PREFIX}${suffix}`);
+		try {
+			execSync(`tmux rename-window -t "${windowId}" -- "${PREFIX}${suffix}"`, { stdio: "pipe" });
+		} catch {
+			// ignore
+		}
 	}
 
 	pi.on("session_start", async () => {
@@ -59,7 +68,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_shutdown", async () => {
 		try {
-			execSync("tmux set-window-option automatic-rename on", { stdio: "pipe" });
+			execSync(`tmux set-window-option -t "${windowId}" automatic-rename on`, { stdio: "pipe" });
 		} catch {
 			// ignore
 		}
