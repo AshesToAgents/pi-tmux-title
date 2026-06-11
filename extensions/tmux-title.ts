@@ -58,6 +58,10 @@ export default function (pi: ExtensionAPI) {
 	});
 
 	pi.on("session_shutdown", async () => {
-		renameWindow("pi");
+		try {
+			execSync("tmux set-window-option automatic-rename on", { stdio: "pipe" });
+		} catch {
+			// ignore
+		}
 	});
 }
