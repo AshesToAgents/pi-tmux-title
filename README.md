@@ -1,6 +1,6 @@
 # pi-tmux-title
 
-A [pi](https://github.com/mariozechner/pi-coding-agent) extension that dynamically sets tmux window titles to reflect what the agent is doing.
+A [pi](https://github.com/earendil-works/pi) extension that dynamically sets tmux window titles to reflect what the agent is doing.
 
 ## Install
 
