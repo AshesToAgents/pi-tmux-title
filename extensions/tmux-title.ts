@@ -22,25 +22,29 @@ function isTmux(): boolean {
 	return !!process.env.TMUX;
 }
 
-// Capture the window ID at load time so we always target the correct window,
-// even if the user switches to a different tmux window while pi is working.
-function getWindowId(): string | null {
-	try {
-		return execSync("tmux display-message -p '#{window_id}'", { stdio: ["pipe", "pipe", "pipe"] }).toString().trim();
-	} catch {
-		return null;
-	}
+// Resolve targets by pane ID ($TMUX_PANE), which tmux sets in the environment of
+// every process spawned inside a pane. This is the only reliable way to
+// identify "our" window: untargeted commands and `display-message` without
+// `-t` resolve against the *client's* focused window, so if pi is launched in
+// a background window, a grouped session, or from a process whose tty doesn't
+// match the attached client, tmux resolves a different (recently active)
+// client's window and the title ends up on the wrong window. Tmux promotes a
+// pane ID to its containing window for window-targeted commands, so the title
+// also follows the pane across moves (join-pane, move-window).
+function getPaneId(): string | null {
+	const paneId = process.env.TMUX_PANE;
+	return paneId && /^%\d+$/.test(paneId) ? paneId : null;
 }
 
 export default function (pi: ExtensionAPI) {
 	if (!isTmux()) return;
 
-	const windowId = getWindowId();
-	if (!windowId) return;
+	const paneId = getPaneId();
+	if (!paneId) return;
 
 	function setTitle(suffix: string) {
 		try {
-			execSync(`tmux rename-window -t "${windowId}" -- "${PREFIX}${suffix}"`, { stdio: "pipe" });
+			execSync(`tmux rename-window -t "${paneId}" -- "${PREFIX}${suffix}"`, { stdio: "pipe" });
 		} catch {
 			// ignore
 		}
@@ -68,7 +72,7 @@ export default function (pi: ExtensionAPI) {
 
 	pi.on("session_shutdown", async () => {
 		try {
-			execSync(`tmux set-window-option -t "${windowId}" automatic-rename on`, { stdio: "pipe" });
+			execSync(`tmux set-window-option -t "${paneId}" automatic-rename on`, { stdio: "pipe" });
 		} catch {
 			// ignore
 		}
